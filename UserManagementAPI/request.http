@@ -4,7 +4,8 @@ Content-Type: application/json
 
 {
   "userName": "john_doe",
-  "age": 30
+  "age": 30,
+  "email": "john.doe@example.com"
 }
 
 ### Create another user (POST /users)
@@ -13,7 +14,8 @@ Content-Type: application/json
 
 {
   "userName": "jane_doe",
-  "age": 25
+  "age": 25,
+  "email": "jane.doe@example.com"
 }
 ### Create another user (POST /users)
 POST http://localhost:5087/users
@@ -21,9 +23,38 @@ Content-Type: application/json
 
 {
   "userName": "jackson_doe",
-  "age": 28
+  "age": 28,
+  "email": "jackson.doe@example.com"
+}
+### Create another user (POST /users)
+POST http://localhost:5087/users
+Content-Type: application/json
+
+{
+  "userName": "jules_roe",
+  "age": 33,
+  "email": "jules.roe@example.com"
+}
+### Create another user invalid age (POST /users)
+POST http://localhost:5087/users
+Content-Type: application/json
+
+{
+  "userName": "james_roe",
+  "age": -2,
+  "email": "james.roe@example.com"
 }
 
+
+### Create another user invalid email format (POST /users)
+POST http://localhost:5087/users
+Content-Type: application/json
+
+{
+  "userName": "james_roe",
+  "age": 28,
+  "email": "jacks"
+}
 ### Get all users (GET /users)
 GET http://localhost:5087/users
 

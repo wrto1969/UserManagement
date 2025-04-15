@@ -10,6 +10,23 @@ var users = new List<User>();
 // Create (POST) - Add a new user
 app.MapPost("/users", (User user) =>
 {
+    // Validate input
+    if (string.IsNullOrWhiteSpace(user.UserName) || user.Age <= 0 || string.IsNullOrWhiteSpace(user.Email))
+    {
+        return Results.BadRequest("Please enter a correct age.");
+    }
+    // Validate email format
+    var emailRegex = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+    if (!System.Text.RegularExpressions.Regex.IsMatch(user.Email, emailRegex))
+    {
+        return Results.BadRequest("Please provide a valid email address.");
+    }
+    // Check for duplicate usernames
+    if (users.Any(u => u.UserName == user.UserName))
+    {
+        return Results.Conflict($"A user with the username '{user.UserName}' already exists.");
+    }
+
     users.Add(user);
     return Results.Created($"/users/{user.UserName}", user);
 });
@@ -36,7 +53,8 @@ app.MapPut("/users/{username}", (string username, User updatedUser) =>
         return Results.NotFound();
     }
 
-    user.Age = updatedUser.Age; // This works now because User is a class
+    user.Age = updatedUser.Age;
+    user.Email = updatedUser.Email; // Update email
     return Results.Ok(user);
 });
 
@@ -60,4 +78,5 @@ class User
 {
     public string UserName { get; set; }
     public int Age { get; set; }
+    public string Email { get; set; } // New property
 }
