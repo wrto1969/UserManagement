@@ -1,0 +1,43 @@
+### Create a new user (POST /users)
+POST http://localhost:5087/users
+Content-Type: application/json
+
+{
+  "userName": "john_doe",
+  "age": 30
+}
+
+### Create another user (POST /users)
+POST http://localhost:5087/users
+Content-Type: application/json
+
+{
+  "userName": "jane_doe",
+  "age": 25
+}
+### Create another user (POST /users)
+POST http://localhost:5087/users
+Content-Type: application/json
+
+{
+  "userName": "jackson_doe",
+  "age": 28
+}
+
+### Get all users (GET /users)
+GET http://localhost:5087/users
+
+### Get a user by username (GET /users/{username})
+GET http://localhost:5087/users/john_doe
+
+### Update a user by username (PUT /users/{username})
+PUT http://localhost:5087/users/john_doe
+Content-Type: application/json
+
+{
+  "userName": "john_doe",
+  "age": 35
+}
+
+### Delete a user by username (DELETE /users/{username})
+DELETE http://localhost:5087/users/john_doe

@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "woh6ZjGFu2M=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\wrto6\\OneDrive\\cSharpe\\blazor\\backEnd\\UserManagement\\UserManagementAPI\\UserManagementAPI.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\wrto6\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.2\\microsoft.aspnetcore.openapi.9.0.2.nupkg.sha512",
+    "C:\\Users\\wrto6\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}
