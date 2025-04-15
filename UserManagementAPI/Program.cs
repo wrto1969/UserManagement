@@ -4,47 +4,36 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 
-// In-memory list to store users
 var users = new List<User>();
-
-// Create (POST) - Add a new user
+/*
+  This section sets up a route for when someone sends data to "/users".
+  It's specifically designed to add a new user.
+*/
 app.MapPost("/users", (User user) =>
-{
-    // Validate input
-    if (string.IsNullOrWhiteSpace(user.UserName) || user.Age <= 0 || string.IsNullOrWhiteSpace(user.Email))
+{    // Check if the new user's information is valid (e.g., the username isn't already taken).
+    var validationResult = ValidateUser(user, users);
+    // If there's a problem with the user's information, stop here and return a message explaining the issue.
+    if (validationResult is not null)
     {
-        return Results.BadRequest("Please enter a correct age.");
-    }
-    // Validate email format
-    var emailRegex = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
-    if (!System.Text.RegularExpressions.Regex.IsMatch(user.Email, emailRegex))
-    {
-        return Results.BadRequest("Please provide a valid email address.");
-    }
-    // Check for duplicate usernames
-    if (users.Any(u => u.UserName == user.UserName))
-    {
-        return Results.Conflict($"A user with the username '{user.UserName}' already exists.");
-    }
-
+        return validationResult;
+    }    
+    // Add the new user to our list of users.
     users.Add(user);
+    /*
+        Send a response saying the user was successfully created.
+        Also provide a link to where details about the new user can be found.
+    */
     return Results.Created($"/users/{user.UserName}", user);
 });
 
-// Read (GET) - Get all users
-app.MapGet("/users", () =>
-{
-    return Results.Ok(users);
-});
+app.MapGet("/users", () => Results.Ok(users));
 
-// Read (GET) - Get a user by username
 app.MapGet("/users/{username}", (string username) =>
 {
     var user = users.FirstOrDefault(u => u.UserName == username);
     return user is not null ? Results.Ok(user) : Results.NotFound();
 });
 
-// Update (PUT) - Update a user by username
 app.MapPut("/users/{username}", (string username, User updatedUser) =>
 {
     var user = users.FirstOrDefault(u => u.UserName == username);
@@ -53,12 +42,17 @@ app.MapPut("/users/{username}", (string username, User updatedUser) =>
         return Results.NotFound();
     }
 
+    var validationResult = ValidateUser(updatedUser, users.Where(u => u.UserName != username).ToList());
+    if (validationResult is not null)
+    {
+        return validationResult;
+    }
+
     user.Age = updatedUser.Age;
-    user.Email = updatedUser.Email; // Update email
+    user.Email = updatedUser.Email;
     return Results.Ok(user);
 });
 
-// Delete (DELETE) - Remove a user by username
 app.MapDelete("/users/{username}", (string username) =>
 {
     var user = users.FirstOrDefault(u => u.UserName == username);
@@ -73,10 +67,40 @@ app.MapDelete("/users/{username}", (string username) =>
 
 app.Run();
 
-// Change from record to class to allow property mutation
+static IResult? ValidateUser(User user, List<User> users)
+{
+    if (string.IsNullOrWhiteSpace(user.UserName) || user.Age <= 0 || string.IsNullOrWhiteSpace(user.Email))
+    {
+        return Results.BadRequest("Invalid user data. Ensure UserName, Age, and Email are provided and valid.");
+    }
+
+    var emailRegex = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+    if (!System.Text.RegularExpressions.Regex.IsMatch(user.Email, emailRegex))
+    {
+        return Results.BadRequest("Please provide a valid email address.");
+    }
+
+    if (users.Any(u => u.UserName == user.UserName))
+    {
+        return Results.Conflict($"A user with the username '{user.UserName}' already exists.");
+    }
+
+    if (users.Any(u => u.Email == user.Email))
+    {
+        return Results.Conflict($"A user with the email '{user.Email}' already exists.");
+    }
+
+    return null;
+}
+
 class User
 {
     public string UserName { get; set; }
     public int Age { get; set; }
-    public string Email { get; set; } // New property
+    public string Email { get; set; }
+
+    public override string ToString()
+    {
+        return $"UserName: {UserName}, Age: {Age}, Email: {Email}";
+    }
 }

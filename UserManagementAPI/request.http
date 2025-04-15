@@ -55,6 +55,15 @@ Content-Type: application/json
   "age": 28,
   "email": "jacks"
 }
+### Create another user (POST /users)
+POST http://localhost:5087/users
+Content-Type: application/json
+
+{
+  "userName": "rex_doe",
+  "age": 28,
+  "email": "jackson.doe@example.com"
+}
 ### Get all users (GET /users)
 GET http://localhost:5087/users
 
