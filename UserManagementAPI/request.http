@@ -81,3 +81,64 @@ Content-Type: application/json
 
 ### Delete a user by username (DELETE /users/{username})
 DELETE http://localhost:5087/users/john_doe
+
+
+### Create a new blog (POST /blogs)
+POST http://localhost:5087/blogs
+Content-Type: application/json
+
+{
+  "title": "My First Blog",
+  "content": "This is the content of my first blog."
+}
+
+### Create another blog (POST /blogs)
+POST http://localhost:5087/blogs
+Content-Type: application/json
+
+{
+  "title": "My Third Blog",
+  "content": "This is the content of a new blog."
+}
+
+### Create a blog with duplicate title (POST /blogs)
+POST http://localhost:5087/blogs
+Content-Type: application/json
+
+{
+  "title": "My First Blog",
+  "content": "This is a duplicate blog with the same title."
+}
+
+### Get all blogs (GET /blogs)
+GET http://localhost:5087/blogs
+
+### Get a blog by title (GET /blogs/{title})
+GET http://localhost:5087/blogs/My%20First%20Blog
+
+### Get a non-existent blog by title (GET /blogs/{title})
+GET http://localhost:5087/blogs/NonExistentBlog
+
+### Update a blog by title (PUT /blogs/{title})
+PUT http://localhost:5087/blogs/My%20First%20Blog
+Content-Type: application/json
+
+{
+  "title": "My First Blog",
+  "content": "This is the updated content of my first blog."
+}
+
+### Update a non-existent blog by title (PUT /blogs/{title})
+PUT http://localhost:5087/blogs/NonExistentBlog
+Content-Type: application/json
+
+{
+  "title": "NonExistentBlog",
+  "content": "This is an update attempt for a non-existent blog."
+}
+
+### Delete a blog by title (DELETE /blogs/{title})
+DELETE http://localhost:5087/blogs/My%20First%20Blog
+
+### Delete a non-existent blog by title (DELETE /blogs/{title})
+DELETE http://localhost:5087/blogs/NonExistentBlog

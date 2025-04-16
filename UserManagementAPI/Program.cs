@@ -26,6 +26,63 @@ app.MapPost("/users", (User user) =>
     return Results.Created($"/users/{user.UserName}", user);
 });
 
+/*  blogs section */
+var blogs = new List<Blog>
+{
+    new Blog { Title = "First Blog", Content = "This is the content of the first blog." },
+    new Blog { Title = "Second Blog", Content = "This is the content of the second blog." }
+};
+
+app.MapGet("/", () => "Welcome to the User Management API!");
+
+/*  MAPPING */
+app.MapGet("/blogs", () => Results.Ok(blogs));
+// This route retrieves a blog post by its title.
+// It checks if a blog with the given title exists and returns it if found, or a 404 Not Found response if not.
+app.MapGet("/blogs/{title}", (string title) =>
+{
+    var blog = blogs.FirstOrDefault(b => b.Title == title);
+    return blog is not null ? Results.Ok(blog) : Results.NotFound();
+});
+
+app.MapPost("/blogs", (Blog blog) =>
+{
+    if (string.IsNullOrWhiteSpace(blog.Title) || string.IsNullOrWhiteSpace(blog.Content))
+    {
+        return Results.BadRequest("Invalid blog data. Ensure Title and Content are provided.");
+    }
+
+    if (blogs.Any(b => b.Title == blog.Title))
+    {
+        return Results.Conflict($"A blog with the title '{blog.Title}' already exists.");
+    }
+
+    blogs.Add(blog);
+    return Results.Created($"/blogs/{blog.Title}", blog);
+});
+app.MapPut("/blogs/{title}", (string title, Blog updatedBlog) =>
+{
+    var blog = blogs.FirstOrDefault(b => b.Title == title);
+    if (blog is null)
+    {
+        return Results.NotFound();
+    }
+
+    blog.Content = updatedBlog.Content;
+    return Results.Ok(blog);
+});
+app.MapDelete("/blogs/{title}", (string title) =>
+{
+    var blog = blogs.FirstOrDefault(b => b.Title == title);
+    if (blog is null)
+    {
+        return Results.NotFound();
+    }
+
+    blogs.Remove(blog);
+    return Results.NoContent();
+});
+/* USERS */
 app.MapGet("/users", () => Results.Ok(users));
 
 app.MapGet("/users/{username}", (string username) =>
@@ -92,6 +149,11 @@ static IResult? ValidateUser(User user, List<User> users)
 
     return null;
 }
+/* blog mapping */
+
+
+
+
 
 class User
 {
@@ -102,5 +164,15 @@ class User
     public override string ToString()
     {
         return $"UserName: {UserName}, Age: {Age}, Email: {Email}";
+    }
+}
+class Blog
+{
+    public string Title { get; set; }
+    public string Content { get; set; }
+
+    public override string ToString()
+    {
+        return $"Title: {Title}, Content: {Content}";
     }
 }
