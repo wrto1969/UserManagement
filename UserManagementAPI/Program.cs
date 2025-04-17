@@ -2,6 +2,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 var app = builder.Build();
 
+// Add the middleware to the pipeline
+app.UseMiddleware<RequestResponseLoggingMiddleware>();
+app.UseMiddleware<RequestLoggingAndExceptionHandlingMiddleware>();
 app.UseHttpsRedirection();
 
 var users = new List<User>();
@@ -148,12 +151,100 @@ static IResult? ValidateUser(User user, List<User> users)
     }
 
     return null;
+} 
+public class RequestResponseLoggingMiddleware
+{
+    private readonly RequestDelegate _next;
+    private readonly ILogger<RequestResponseLoggingMiddleware> _logger;
+
+    public RequestResponseLoggingMiddleware(RequestDelegate next, ILogger<RequestResponseLoggingMiddleware> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        // Log the HTTP Request
+        _logger.LogInformation("HTTP Request: {method} {url} {headers}",
+            context.Request.Method,
+            context.Request.Path,
+            context.Request.Headers);
+
+        // Copy the original response body stream
+        var originalResponseBodyStream = context.Response.Body;
+
+        using (var responseBody = new MemoryStream())
+        {
+            context.Response.Body = responseBody;
+
+            // Call the next middleware in the pipeline
+            await _next(context);
+
+            // Log the HTTP Response
+            context.Response.Body.Seek(0, SeekOrigin.Begin);
+            var responseText = await new StreamReader(context.Response.Body).ReadToEndAsync();
+            context.Response.Body.Seek(0, SeekOrigin.Begin);
+
+            _logger.LogInformation("HTTP Response: {statusCode} {body}",
+                context.Response.StatusCode,
+                responseText);
+
+            // Copy the response back to the original stream
+            await responseBody.CopyToAsync(originalResponseBodyStream);
+        }
+    }
 }
-/* blog mapping */
 
+public class RequestLoggingAndExceptionHandlingMiddleware
+{
+    private readonly RequestDelegate _next;
+    private readonly ILogger<RequestLoggingAndExceptionHandlingMiddleware> _logger;
 
+    public RequestLoggingAndExceptionHandlingMiddleware(RequestDelegate next, ILogger<RequestLoggingAndExceptionHandlingMiddleware> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
 
+    public async Task InvokeAsync(HttpContext context)
+    {
+        try
+        {
+            // Log the HTTP Request
+            _logger.LogInformation("HTTP Request: {method} {url} {headers}",
+                context.Request.Method,
+                context.Request.Path,
+                context.Request.Headers);
 
+            // Call the next middleware in the pipeline
+            await _next(context);
+        }
+        catch (Exception ex)
+        {
+            // Log the exception
+            _logger.LogError(ex, "An unhandled exception occurred while processing the request.");
+
+            // Return a consistent error response
+            await HandleExceptionAsync(context, ex);
+        }
+    }
+
+    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+    {
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+
+        var errorResponse = new
+        {
+            StatusCode = context.Response.StatusCode,
+            Message = "An unexpected error occurred. Please try again later.",
+            Details = exception.Message // You can remove this in production for security reasons
+        };
+
+        return context.Response.WriteAsJsonAsync(errorResponse);
+    }
+}
 
 class User
 {
