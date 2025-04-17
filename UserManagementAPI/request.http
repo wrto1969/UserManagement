@@ -142,4 +142,9 @@ DELETE http://localhost:5087/blogs/My%20First%20Blog
 
 ### Delete a non-existent blog by title (DELETE /blogs/{title})
 DELETE http://localhost:5087/blogs/NonExistentBlog
-
+### Request with a valid token
+GET http://localhost:5087/blogs
+Authorization: valid-token
+### Request with an invalid token
+GET http://localhost:5087/blogs
+Authorization: invalid-token

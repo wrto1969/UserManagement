@@ -5,6 +5,7 @@ var app = builder.Build();
 // Add the middleware to the pipeline
 app.UseMiddleware<RequestResponseLoggingMiddleware>();
 app.UseMiddleware<RequestLoggingAndExceptionHandlingMiddleware>();
+app.UseMiddleware<TokenValidationMiddleware>();
 app.UseHttpsRedirection();
 
 var users = new List<User>();
@@ -243,6 +244,57 @@ public class RequestLoggingAndExceptionHandlingMiddleware
         };
 
         return context.Response.WriteAsJsonAsync(errorResponse);
+    }
+}
+
+public class TokenValidationMiddleware
+{
+    private readonly RequestDelegate _next;
+    private readonly ILogger<TokenValidationMiddleware> _logger;
+
+    public TokenValidationMiddleware(RequestDelegate next, ILogger<TokenValidationMiddleware> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        // Check if the Authorization header is present
+        if (!context.Request.Headers.TryGetValue("Authorization", out var token))
+        {
+            _logger.LogWarning("Authorization header is missing.");
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsJsonAsync(new
+            {
+                StatusCode = StatusCodes.Status401Unauthorized,
+                Message = "Authorization header is missing."
+            });
+            return;
+        }
+
+        // Validate the token (replace this with your actual token validation logic)
+        if (!IsValidToken(token))
+        {
+            _logger.LogWarning("Invalid token: {Token}", token);
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsJsonAsync(new
+            {
+                StatusCode = StatusCodes.Status401Unauthorized,
+                Message = "Invalid token."
+            });
+            return;
+        }
+
+        // Token is valid, proceed to the next middleware
+        await _next(context);
+    }
+
+    private bool IsValidToken(string token)
+    {
+        // Replace this with your actual token validation logic
+        // For example, check against a database, validate a JWT, etc.
+        return token == "valid-token"; // Example: Replace "valid-token" with your logic
     }
 }
 
